@@ -9,7 +9,7 @@ interface JoinPageProps {
 
 export default function JoinPage({ params }: JoinPageProps) {
   const { code } = use(params);
-  const normalizedCode = code.trim().toLowerCase();
+  const normalizedCode = code.trim().slice(0, -1);
   console.info("[audience] joining session", normalizedCode);
   return <AudienceLiveView code={normalizedCode} />;
 }
