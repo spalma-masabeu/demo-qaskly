@@ -1,0 +1,18 @@
+[build]
+builder = "RAILPACK"
+buildCommand = "pnpm --filter @qaskly/shared build && pnpm --filter @qaskly/web build"
+watchPatterns = [
+  "apps/web/**",
+  "packages/shared/**",
+  "package.json",
+  "pnpm-lock.yaml",
+  "pnpm-workspace.yaml",
+  "tsconfig.base.json"
+]
+
+[deploy]
+startCommand = "pnpm --filter @qaskly/web start"
+healthcheckPath = "/"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
