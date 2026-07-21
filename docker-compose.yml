@@ -1,0 +1,23 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: qaskly-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: qaskly
+      POSTGRES_PASSWORD: qaskly
+      POSTGRES_DB: qaskly
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: qaskly-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres-data:

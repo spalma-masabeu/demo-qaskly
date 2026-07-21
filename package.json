@@ -1,0 +1,22 @@
+{
+  "name": "qaskly",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@9.15.9",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "pnpm -r --parallel --filter @qaskly/web --filter @qaskly/api dev",
+    "dev:web": "pnpm --filter @qaskly/web dev",
+    "dev:api": "pnpm --filter @qaskly/api dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "db:generate": "pnpm --filter @qaskly/api prisma:generate",
+    "db:migrate": "pnpm --filter @qaskly/api prisma:migrate",
+    "db:studio": "pnpm --filter @qaskly/api prisma:studio"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}
