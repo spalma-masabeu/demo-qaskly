@@ -1,0 +1,161 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  PRESENTER
+  ADMIN
+}
+
+enum AuthProvider {
+  AUTH0
+}
+
+enum PresentationTheme {
+  CLASSIC
+  DARK
+  PLAYFUL
+  MINIMAL
+}
+
+enum PresentationStatus {
+  DRAFT
+  READY
+  ARCHIVED
+}
+
+enum SlideType {
+  MULTIPLE_CHOICE
+  WORD_CLOUD
+  OPEN_ENDED
+  SCALES
+  RANKING
+  GUESS_THE_NUMBER
+  TWO_BY_TWO
+}
+
+enum SessionStatus {
+  CREATED
+  LIVE
+  ENDED
+  INCOMPLETE
+}
+
+enum EndedReason {
+  COMPLETED
+  MANUAL
+  ERROR
+}
+
+model User {
+  id            String         @id @default(cuid())
+  authProvider  AuthProvider   @default(AUTH0)
+  authSubject   String
+  email         String         @unique
+  name          String?
+  profession    String?
+  birthday      DateTime?
+  usagePurpose  String?
+  role          UserRole       @default(PRESENTER)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  presentations Presentation[]
+
+  @@unique([authProvider, authSubject])
+  @@index([email])
+}
+
+model Presentation {
+  id           String             @id @default(cuid())
+  ownerId      String
+  title        String
+  description  String?
+  thumbnailUrl String?
+  themeKey     PresentationTheme  @default(CLASSIC)
+  status       PresentationStatus @default(DRAFT)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  owner        User               @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  slides       Slide[]
+  liveSessions LiveSession[]
+
+  @@index([ownerId])
+  @@index([status])
+}
+
+model Slide {
+  id              String        @id @default(cuid())
+  presentationId  String
+  type            SlideType
+  title           String?
+  prompt          String
+  position        Int
+  config          Json
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  presentation    Presentation  @relation(fields: [presentationId], references: [id], onDelete: Cascade)
+  currentSessions LiveSession[] @relation("CurrentSlide")
+  responses       Response[]
+
+  @@unique([presentationId, position])
+  @@index([type])
+}
+
+model LiveSession {
+  id             String        @id @default(cuid())
+  presentationId String
+  code           String        @unique
+  status         SessionStatus @default(CREATED)
+  currentSlideId String?
+  responsesOpen  Boolean       @default(false)
+  startedAt      DateTime?
+  endedAt        DateTime?
+  endedReason    EndedReason?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  presentation   Presentation  @relation(fields: [presentationId], references: [id], onDelete: Cascade)
+  currentSlide   Slide?        @relation("CurrentSlide", fields: [currentSlideId], references: [id], onDelete: SetNull)
+  participants   Participant[]
+  responses      Response[]
+
+  @@index([presentationId])
+  @@index([status])
+  @@index([currentSlideId])
+}
+
+model Participant {
+  id              String      @id @default(cuid())
+  sessionId       String
+  displayName     String?
+  clientTokenHash String
+  joinedAt        DateTime    @default(now())
+  lastSeenAt      DateTime    @default(now())
+  session         LiveSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  responses       Response[]
+
+  @@unique([sessionId, clientTokenHash])
+  @@index([sessionId])
+}
+
+model Response {
+  id            String      @id @default(cuid())
+  sessionId     String
+  slideId       String
+  participantId String
+  type          SlideType
+  value         Json
+  createdAt     DateTime    @default(now())
+  session       LiveSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  slide         Slide       @relation(fields: [slideId], references: [id], onDelete: Cascade)
+  participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, slideId, participantId])
+  @@index([slideId])
+  @@index([participantId])
+  @@index([type])
+}
